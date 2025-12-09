@@ -1,0 +1,105 @@
+
+ #  BANK LOAN ANALYTICS PROJECT – MYSQL QUERIES
+   
+
+##  MERGE BOTH TABLES USING ID 
+CREATE OR REPLACE VIEW merged_finance AS
+SELECT 
+    f1.id,
+    f1.member_id,
+    f1.loan_amnt,
+    f1.grade,
+    f1.sub_grade,
+    f1.verification_status,
+    STR_TO_DATE(f1.issue_d,'%d-%m-%Y') AS issue_d,
+    YEAR(STR_TO_DATE(f1.issue_d,'%d-%m-%Y')) AS issue_year,
+    MONTH(STR_TO_DATE(f1.issue_d,'%d-%m-%Y')) AS issue_month,
+    f1.loan_status,
+    f1.addr_state,
+    f1.home_ownership,
+    f2.revol_bal,
+    f2.total_pymnt,
+    STR_TO_DATE(f2.last_pymnt_d,'%d-%m-%Y') AS last_pymnt_d
+FROM finance_1 f1
+LEFT JOIN finance_2 f2
+ON f1.id = f2.id;
+
+
+## 1 Year-wise Loan Amount 
+SELECT issue_year, SUM(loan_amnt) AS total_loan_amount
+FROM merged_finance
+GROUP BY issue_year
+ORDER BY issue_year;
+
+
+
+## 2 Revolving Balance by Grade 
+SELECT grade, SUM(revol_bal) AS total_revol_bal
+FROM merged_finance
+GROUP BY grade
+ORDER BY grade;
+
+
+## 3 Total Payment by Verification Status 
+SELECT verification_status, SUM(total_pymnt) AS total_payment
+FROM merged_finance
+GROUP BY verification_status;
+
+
+
+##  4 State-wise Loan Status Summary
+SELECT addr_state, loan_status, COUNT(*) AS total_loans
+FROM merged_finance
+GROUP BY addr_state, loan_status
+ORDER BY addr_state;
+
+
+
+## 5 Loan Amount YoY Change 
+SELECT 
+    issue_year,
+    SUM(loan_amnt) AS total_loan,
+    LAG(SUM(loan_amnt)) OVER (ORDER BY issue_year) AS prev_year_loan,
+    ROUND(((SUM(loan_amnt) - 
+            LAG(SUM(loan_amnt)) OVER (ORDER BY issue_year))
+            / LAG(SUM(loan_amnt)) OVER (ORDER BY issue_year)) * 100,2) 
+            AS yoy_percentage
+FROM merged_finance
+GROUP BY issue_year
+ORDER BY issue_year;
+
+
+## 6 Charged-Off Loans Count & Default Rate 
+SELECT 
+    issue_year,
+    SUM(CASE WHEN LOWER(loan_status) LIKE '%charged%' THEN 1 ELSE 0 END) AS charged_off_count,
+    COUNT(*) AS total_loans,
+    ROUND((SUM(CASE WHEN LOWER(loan_status) LIKE '%charged%' THEN 1 ELSE 0 END)
+          / COUNT(*)) * 100,2) AS default_rate_pct
+FROM merged_finance
+GROUP BY issue_year
+ORDER BY issue_year;
+
+
+
+## 7 Home Ownership Analysis 
+SELECT home_ownership, COUNT(*) AS total_loans
+FROM merged_finance
+GROUP BY home_ownership
+ORDER BY total_loans DESC;
+
+
+
+## 8 Grade & Subgrade Distribution 
+SELECT grade, sub_grade, COUNT(*) AS loan_count
+FROM merged_finance
+GROUP BY grade, sub_grade
+ORDER BY grade, sub_grade;
+
+
+
+## 9 Monthly Loan Amount Trend 
+SELECT issue_year, issue_month, SUM(loan_amnt) AS total_loan
+FROM merged_finance
+GROUP BY issue_year, issue_month
+ORDER BY issue_year, issue_month;
