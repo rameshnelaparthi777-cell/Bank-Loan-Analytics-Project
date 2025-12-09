@@ -27,7 +27,6 @@ The dashboard is fully **interactive, visually appealing, and professional**, de
 - **Power BI**: Dashboard creation with KPIs, cards, matrix, and visualizations
 
 ---
-
 ##  Key KPIs
 - Loan Amount YoY
 - Revolving Balance by Grade/Sub-grade
@@ -37,9 +36,63 @@ The dashboard is fully **interactive, visually appealing, and professional**, de
 - Home Ownership vs Last Payment Date Analysis
 
 ---
-
 ##  SQL Queries
-
+## 1 Year-wise Loan Amount 
+SELECT issue_year, SUM(loan_amnt) AS total_loan_amount
+FROM merged_finance
+GROUP BY issue_year
+ORDER BY issue_year;
+## 2 Revolving Balance by Grade 
+SELECT grade, SUM(revol_bal) AS total_revol_bal
+FROM merged_finance
+GROUP BY grade
+ORDER BY grade;
+## 3 Total Payment by Verification Status 
+SELECT verification_status, SUM(total_pymnt) AS total_payment
+FROM merged_finance
+GROUP BY verification_status;
+##  4 State-wise Loan Status Summary
+SELECT addr_state, loan_status, COUNT(*) AS total_loans
+FROM merged_finance
+GROUP BY addr_state, loan_status
+ORDER BY addr_state;
+## 5 Loan Amount YoY Change 
+SELECT 
+    issue_year,
+    SUM(loan_amnt) AS total_loan,
+    LAG(SUM(loan_amnt)) OVER (ORDER BY issue_year) AS prev_year_loan,
+    ROUND(((SUM(loan_amnt) - 
+            LAG(SUM(loan_amnt)) OVER (ORDER BY issue_year))
+            / LAG(SUM(loan_amnt)) OVER (ORDER BY issue_year)) * 100,2) 
+            AS yoy_percentage
+FROM merged_finance
+GROUP BY issue_year
+ORDER BY issue_year;
+## 6 Charged-Off Loans Count & Default Rate 
+SELECT 
+    issue_year,
+    SUM(CASE WHEN LOWER(loan_status) LIKE '%charged%' THEN 1 ELSE 0 END) AS charged_off_count,
+    COUNT(*) AS total_loans,
+    ROUND((SUM(CASE WHEN LOWER(loan_status) LIKE '%charged%' THEN 1 ELSE 0 END)
+          / COUNT(*)) * 100,2) AS default_rate_pct
+FROM merged_finance
+GROUP BY issue_year
+ORDER BY issue_year;
+## 7 Home Ownership Analysis 
+SELECT home_ownership, COUNT(*) AS total_loans
+FROM merged_finance
+GROUP BY home_ownership
+ORDER BY total_loans DESC;
+## 8 Grade & Subgrade Distribution 
+SELECT grade, sub_grade, COUNT(*) AS loan_count
+FROM merged_finance
+GROUP BY grade, sub_grade
+ORDER BY grade, sub_grade;
+## 9 Monthly Loan Amount Trend 
+SELECT issue_year, issue_month, SUM(loan_amnt) AS total_loan
+FROM merged_finance
+GROUP BY issue_year, issue_month
+ORDER BY issue_year, issue_month;
 
 ---
 
