@@ -1,5 +1,4 @@
 # Bank-Loan-Analytics-Project
-# Bank Loan Analytics Project
 
 ## 📌 Project Overview
 This project analyzes customer bank loan data using **SQL, Python, and Power BI**. The goal is to provide insights on:
