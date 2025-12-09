@@ -62,7 +62,7 @@ The dashboard is fully **interactive, visually appealing, and professional**, de
 ---
 
 ##  Screenshots
-
+![DASHBOARD](https://github.com/rameshnelaparthi777-cell/Bank-Loan-Analytics-Project/blob/main/POWER%20BI%20DASHBOARD%20SCREENSHOT.png)
 
 ---
 
