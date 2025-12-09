@@ -1,0 +1,48 @@
+import pandas as pd
+import numpy as np
+from google.colab import files
+
+
+f1=pd.read_csv('/content/Finance_1.csv')
+f2=pd.read_excel('/content/Finance_2.xlsx')
+
+# Clean column names
+f1.columns = [c.strip() for c in f1.columns]
+f2.columns = [c.strip() for c in f2.columns]
+
+# Date conversions
+date_cols_f1 = ['issue_d']
+date_cols_f2 = ['last_pymnt_d', 'next_pymnt_d', 'last_credit_pull_d']
+
+for col in date_cols_f1:
+    if col in f1.columns:
+        f1[col] = pd.to_datetime(f1[col], errors='coerce')
+
+for col in date_cols_f2:
+    if col in f2.columns:
+        f2[col] = pd.to_datetime(f2[col], errors='coerce')
+
+# Remove duplicates
+f1 = f1.drop_duplicates(subset=['id'])
+f2 = f2.drop_duplicates(subset=['id'])
+
+# Merge
+merged = f1.merge(f2, on='id', how='left')
+print("Merged shape:", merged.shape)
+
+# Derived columns
+merged['issue_year'] = merged['issue_d'].dt.year
+merged['issue_month'] = merged['issue_d'].dt.month
+
+# Numeric cleaning 
+num_cols = ['loan_amnt', 'revol_bal', 'total_pymnt']
+for col in num_cols:
+    if col in merged.columns:
+        merged[col] = pd.to_numeric(merged[col], errors='coerce')
+        # Replace NaN with 0 using numpy
+        merged[col] = merged[col].fillna(0)
+
+# Export
+merged.to_csv("MERGED FINANCE.csv", index=False)
+files.download("MERGED FINANCE.csv")
+print(" MERGED FINANCE.csv ready for download")
